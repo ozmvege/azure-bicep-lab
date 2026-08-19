@@ -1,0 +1,166 @@
+/* ------------------------------------------------------------------------------------
+   Palette, carried over from oezen-ucan.dev.
+
+   Dark olive ground, bone text, one lime accent — and the rule that governs the lime:
+   #c8f550 sits at L* ≈ 91, the same lightness band as the bone ground. It measures 15:1
+   on the dark grounds and 1.14:1 on a light one. So it is a foreground on dark and a
+   background on light; in the light scheme the text accent drops to #a8d132, which
+   measures 4.9:1 on bone.
+   ------------------------------------------------------------------------------------ */
+
+:root {
+  --ztwp-surface-deep: #111112;
+  --ztwp-surface: #282c20;
+  --ztwp-surface-raised: #333828;
+  --ztwp-paper: #e8e8e3;
+  --ztwp-paper-dim: #d6d6cf;
+  --ztwp-signal: #c8f550;
+  --ztwp-signal-dim: #a8d132;
+  --ztwp-ink: #14150f;
+  --ztwp-ink-soft: #4a4c40;
+  --ztwp-bone: #e8e8e3;
+  --ztwp-bone-dim: #a9ab9c;
+  --ztwp-bone-faint: #6f7263;
+}
+
+/* ---------- light scheme ---------- */
+
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: var(--ztwp-surface);
+  --md-primary-fg-color--dark: var(--ztwp-surface-deep);
+  --md-primary-bg-color: var(--ztwp-bone);
+  --md-primary-bg-color--light: var(--ztwp-bone-dim);
+
+  /* Never the true lime on a light ground — see the note above. */
+  --md-accent-fg-color: #6f8f14;
+  --md-accent-fg-color--transparent: rgba(168, 209, 50, 0.12);
+
+  --md-default-bg-color: var(--ztwp-paper);
+  --md-default-fg-color: var(--ztwp-ink);
+  --md-default-fg-color--light: var(--ztwp-ink-soft);
+  --md-default-fg-color--lighter: #7c7e6f;
+  --md-typeset-a-color: #556d0f;
+  --md-code-bg-color: var(--ztwp-paper-dim);
+}
+
+/* ---------- dark scheme ---------- */
+
+[data-md-color-scheme="slate"] {
+  --md-hue: 80;
+
+  --md-primary-fg-color: var(--ztwp-surface);
+  --md-primary-fg-color--dark: var(--ztwp-surface-deep);
+  --md-primary-bg-color: var(--ztwp-bone);
+
+  --md-accent-fg-color: var(--ztwp-signal);
+  --md-accent-fg-color--transparent: rgba(200, 245, 80, 0.12);
+
+  --md-default-bg-color: var(--ztwp-surface-deep);
+  --md-default-fg-color: var(--ztwp-bone);
+  --md-default-fg-color--light: var(--ztwp-bone-dim);
+  --md-default-fg-color--lighter: var(--ztwp-bone-faint);
+  --md-typeset-a-color: var(--ztwp-signal);
+  --md-code-bg-color: #1b1c17;
+  --md-code-fg-color: var(--ztwp-bone);
+}
+
+/* ------------------------------------------------------------------------------------
+   Typography. Heavy uppercase headings carry the hierarchy, the way they do on the site
+   this palette comes from.
+   ------------------------------------------------------------------------------------ */
+
+.md-typeset h1 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset h2 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-top: 2.4em;
+  padding-top: 0.6em;
+  border-top: 1px solid var(--md-default-fg-color--lighter);
+}
+
+.md-typeset h3 {
+  font-weight: 650;
+}
+
+/* The lead paragraph of every chapter is a blockquote. Give it the accent rather than the
+   default grey rail — it is a summary, not an aside. */
+.md-typeset blockquote {
+  border-left: 3px solid var(--md-accent-fg-color);
+  color: var(--md-default-fg-color--light);
+}
+
+/* ------------------------------------------------------------------------------------
+   Tables. Every chapter has at least one comparison table and they carry real weight
+   here, so they get a header that reads as a header.
+   ------------------------------------------------------------------------------------ */
+
+.md-typeset table:not([class]) th {
+  background-color: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+  font-weight: 600;
+}
+
+.md-typeset table:not([class]) {
+  border: 1px solid var(--md-default-fg-color--lighter);
+}
+
+/* ------------------------------------------------------------------------------------
+   Code. Long az commands are the norm in this lab; let them scroll rather than wrap into
+   something that cannot be copied.
+   ------------------------------------------------------------------------------------ */
+
+.md-typeset pre > code {
+  overflow-x: auto;
+}
+
+.md-typeset code {
+  border-radius: 3px;
+}
+
+/* Mermaid diagrams sit on the page ground, not on a white card. */
+.md-typeset .mermaid {
+  background: transparent;
+  margin: 1.6em 0;
+}
+
+/* ------------------------------------------------------------------------------------
+   Checkpoint lists. Every chapter ends with one, and they should look like something to
+   work through rather than a bulleted list that happens to have boxes.
+   ------------------------------------------------------------------------------------ */
+
+.md-typeset .task-list-item {
+  margin-bottom: 0.35em;
+}
+
+.md-typeset .task-list-control .task-list-indicator::before {
+  background-color: var(--md-default-fg-color--lighter);
+}
+
+.md-typeset .task-list-control [type="checkbox"]:checked + .task-list-indicator::before {
+  background-color: var(--md-accent-fg-color);
+}
+
+/* ------------------------------------------------------------------------------------
+   Header and navigation.
+   ------------------------------------------------------------------------------------ */
+
+.md-header {
+  border-bottom: 1px solid rgba(200, 245, 80, 0.18);
+}
+
+.md-nav__title {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+
+.md-nav__link--active {
+  font-weight: 600;
+}

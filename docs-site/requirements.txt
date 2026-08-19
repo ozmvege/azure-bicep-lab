@@ -1,0 +1,9 @@
+# Pinned deliberately.
+#
+# MkDocs 2.0 removes the plugin system and the theming system with no migration path, so a
+# floating version here is a site that stops building on someone else's release schedule.
+# These three versions are the ones this site was built and checked against.
+
+mkdocs==1.6.1
+mkdocs-material==9.7.7
+pymdown-extensions==11.0.1

@@ -8,6 +8,9 @@ It is not a tutorial that ends with a green checkmark. Every control the archite
 comes with a command that tries to break it, and the chapter is only finished when the
 attempt fails for the reason the design says it should.
 
+**Read it as a site: [ozmvege.github.io/azure-bicep-lab](https://ozmvege.github.io/azure-bicep-lab/)**
+— same content, with search and a chapter sidebar.
+
 ```mermaid
 graph TB
     Internet(["Internet"]) --> AGW["Application Gateway WAF_v2<br/>OWASP CRS 3.2 · the only public IP"]
