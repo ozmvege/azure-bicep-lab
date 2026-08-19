@@ -92,6 +92,10 @@ jobs:
     name: What-if against the subscription
     runs-on: ubuntu-latest
     needs: compile
+    # Skipped until OIDC is configured (docs/09-cicd-oidc.md). Without this guard, every
+    # pull request on a fresh clone shows a red cross from azure/login for a step that was
+    # never going to work yet — which trains people to ignore red crosses.
+    if: ${{ secrets.AZURE_CLIENT_ID != '' }}
     # A GitHub environment lets the what-if run against a real subscription without any
     # long-lived credential: the federated credential is scoped to this environment.
     environment: dev

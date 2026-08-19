@@ -98,6 +98,10 @@ The bootstrap prints three values. Paste them into
 
 `bash` equivalents of all four live beside them in [`scripts/`](scripts).
 
+> **The workflows do not deploy anything until you set them up.** `Deploy` and `Destroy` are
+> manual-trigger only, and CI's what-if job skips itself while the Azure secrets are absent —
+> so a fresh clone is green and costs nothing. [Chapter 09](docs/09-cicd-oidc.md) turns them on.
+
 ---
 
 ## Cost

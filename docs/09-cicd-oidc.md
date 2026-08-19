@@ -206,6 +206,20 @@ is mostly unchanged resources and the three that matter are lost in it.
 [chapter 08](08-deployment-stacks.md) against a GitHub environment, so a required reviewer
 on `prod` becomes an approval gate on the deployment itself.
 
+**It is `workflow_dispatch` only.** The push trigger is present but commented out, and that
+is deliberate: this platform costs roughly USD 0.44 an hour, so creating it should be
+something you ask for rather than something a `git push` does. Uncomment the trigger once
+the three prerequisites above are in place and you actually want continuous deployment.
+
+The same reasoning shapes the `whatif` job in [`ci.yml`](../.github/workflows/ci.yml):
+
+```yaml
+if: ${{ secrets.AZURE_CLIENT_ID != '' }}
+```
+
+It skips instead of failing until OIDC is set up. A pipeline that is red for a reason nobody
+intends to fix teaches people to ignore red.
+
 [`destroy.yml`](../.github/workflows/destroy.yml) is manual only and gated on typing
 `DESTROY`:
 

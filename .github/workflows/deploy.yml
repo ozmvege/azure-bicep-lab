@@ -3,13 +3,24 @@ name: Deploy
 # The deployment is a stack, not a plain deployment. That single choice is what gives the
 # platform a lifecycle: resources removed from the template are removed from Azure, and the
 # deny assignment stops anyone editing them in the portal behind the pipeline's back.
+#
+# Manual trigger only, deliberately. A push trigger on a lab that costs roughly USD 0.44 an
+# hour is a trap: cloning the repository would fire it, and the first thing a reader would
+# see is a red cross from azure/login before they had ever set up OIDC. Spending money and
+# creating infrastructure should be something you ask for, not something a git push does.
+#
+# Prerequisites, once, before this workflow can succeed:
+#   1. an app registration with a federated credential  — docs/09-cicd-oidc.md
+#   2. AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID as repository secrets
+#   3. the bootstrap vault, and its coordinates in infra/main.<env>.bicepparam
+#
+# To enable continuous deployment once all three are in place, uncomment the push trigger.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'infra/**'
-      - '.github/workflows/deploy.yml'
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'infra/**'
   workflow_dispatch:
     inputs:
       environment:
