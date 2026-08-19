@@ -1,0 +1,55 @@
+#
+# PSRule for Azure — the second opinion.
+#
+# The Bicep linter checks the language. PSRule checks the architecture: it expands the
+# templates the same way ARM would and then applies several hundred rules drawn from the
+# Well-Architected Framework. It is the closest thing to having a reviewer who has read
+# every Azure best-practice document and never gets tired.
+#
+# Suppressions below are deliberate. Every one names a lab constraint, and every one would
+# be wrong in production — which is exactly why they are written down instead of ignored.
+#
+
+configuration:
+  # Expand .bicep and .bicepparam the way ARM does, so rules see resolved values rather
+  # than parameter placeholders.
+  AZURE_BICEP_FILE_EXPANSION: true
+  AZURE_BICEP_FILE_EXPANSION_TIMEOUT: 30
+  AZURE_PARAMETER_FILE_EXPANSION: true
+
+  # Required tags, checked by Azure.Resource.UseTags and friends.
+  AZURE_RESOURCE_GROUP_REQUIRED_TAGS:
+    - workload
+    - environment
+    - managedBy
+    - costCentre
+
+input:
+  pathIgnore:
+    - '*.md'
+    - 'docs/'
+    - '.github/'
+    - 'scripts/'
+
+rule:
+  exclude:
+    # Purge protection is off on purpose: with it enabled, a torn-down lab reserves its
+    # vault name for 90 days and the next run cannot reuse it.
+    - Azure.KeyVault.PurgeProtect
+
+    # The dev profile runs a B1 plan and a Burstable database. Both rules are correct about
+    # production and irrelevant to a lab that lives for two hours.
+    - Azure.AppService.MinPlan
+    - Azure.AppService.PlanInstanceCount
+
+    # No custom domain and no certificate in the default path, so the gateway listens on
+    # port 80. Supply certificateKeyVaultUri and this suppression should be removed.
+    - Azure.AppGw.SSLPolicy
+    - Azure.AppGw.UseHTTPS
+
+    # The lab has no availability requirement and deliberately runs single-zone in dev.
+    - Azure.AppGw.MinInstance
+
+output:
+  culture:
+    - en-US

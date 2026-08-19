@@ -1,0 +1,46 @@
+{
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "allowedValues": ["Audit", "Deny", "Disabled"],
+      "defaultValue": "Deny",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Effect applied to sites that accept plain HTTP or legacy TLS."
+      }
+    },
+    "minimumTlsVersion": {
+      "type": "String",
+      "allowedValues": ["1.2", "1.3"],
+      "defaultValue": "1.2",
+      "metadata": {
+        "displayName": "Minimum TLS version"
+      }
+    }
+  },
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Web/sites"
+        },
+        {
+          "anyOf": [
+            {
+              "field": "Microsoft.Web/sites/httpsOnly",
+              "notEquals": "true"
+            },
+            {
+              "field": "Microsoft.Web/sites/siteConfig.minTlsVersion",
+              "less": "[parameters('minimumTlsVersion')]"
+            }
+          ]
+        }
+      ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "analyzers": {
+    "core": {
+      "enabled": true,
+      "verbose": true,
+      "rules": {
+        "adminusername-should-not-be-literal": { "level": "error" },
+        "no-hardcoded-env-urls": { "level": "error" },
+        "no-unnecessary-dependson": { "level": "error" },
+        "no-unused-params": { "level": "error" },
+        "no-unused-vars": { "level": "error" },
+        "outputs-should-not-contain-secrets": { "level": "error" },
+        "prefer-interpolation": { "level": "error" },
+        "protect-commandtoexecute-secrets": { "level": "error" },
+        "secure-parameter-default": { "level": "error" },
+        "secure-secrets-in-params": { "level": "error" },
+        "simplify-interpolation": { "level": "error" },
+        "use-parent-property": { "level": "warning" },
+        "use-recent-api-versions": { "level": "off" },
+        "explicit-values-for-loc-params": { "level": "off" }
+      }
+    }
+  },
+  "moduleAliases": {
+    "br": {
+      "avm": {
+        "registry": "mcr.microsoft.com",
+        "modulePath": "bicep/avm/res"
+      }
+    }
+  },
+  "experimentalFeaturesEnabled": {
+    "assertions": true,
+    "testFramework": true
+  }
+}

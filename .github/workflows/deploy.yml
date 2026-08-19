@@ -1,0 +1,72 @@
+name: Deploy
+
+# The deployment is a stack, not a plain deployment. That single choice is what gives the
+# platform a lifecycle: resources removed from the template are removed from Azure, and the
+# deny assignment stops anyone editing them in the portal behind the pipeline's back.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy
+        type: choice
+        options: [dev, prod]
+        default: dev
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-${{ inputs.environment || 'dev' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deployment stack
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
+    env:
+      ENVIRONMENT: ${{ inputs.environment || 'dev' }}
+      LOCATION: westeurope
+      STACK_NAME: ztwp-${{ inputs.environment || 'dev' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sign in with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Create or update the deployment stack
+        run: |
+          set -euo pipefail
+          az stack sub create \
+            --name "$STACK_NAME" \
+            --location "$LOCATION" \
+            --template-file infra/main.bicep \
+            --parameters "infra/main.$ENVIRONMENT.bicepparam" \
+            --action-on-unmanage deleteResources \
+            --deny-settings-mode denyWriteAndDelete \
+            --deny-settings-apply-to-child-scopes \
+            --description "Zero-trust web platform, $ENVIRONMENT" \
+            --yes
+
+      - name: Publish the outputs
+        run: |
+          set -euo pipefail
+          az stack sub show --name "$STACK_NAME" --query "outputs" -o json | tee outputs.json
+          {
+            echo '### Deployed'
+            echo ''
+            echo '```json'
+            cat outputs.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

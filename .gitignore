@@ -1,0 +1,22 @@
+# Bicep build output
+*.json.bak
+infra/**/*.json
+!infra/**/policy-rules/*.json
+
+# Azure CLI / local state
+.azure/
+*.deployment.json
+whatif-*.txt
+
+# Secrets — nothing here should ever exist, but belt and braces
+*.env
+*.pem
+*.pfx
+*.key
+local.settings.json
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,30 @@
+{
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "allowedValues": ["Audit", "Deny", "Disabled"],
+      "defaultValue": "Deny",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Audit while you find the offenders, Deny once you have."
+      }
+    }
+  },
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Storage/storageAccounts"
+        },
+        {
+          "field": "Microsoft.Storage/storageAccounts/allowBlobPublicAccess",
+          "notEquals": "false"
+        }
+      ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]"
+    }
+  }
+}

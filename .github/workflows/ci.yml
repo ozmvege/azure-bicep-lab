@@ -1,0 +1,145 @@
+name: CI
+
+# Everything here runs on a pull request and nothing here changes Azure. The point is that
+# a reviewer sees three things before approving: does it compile, does it violate a rule
+# someone already wrote down, and what exactly would it do to the subscription.
+
+on:
+  pull_request:
+    paths:
+      - 'infra/**'
+      - '.ps-rule/**'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write        # required for OIDC; without it azure/login has nothing to present
+  pull-requests: write   # so what-if output can be posted back onto the PR
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TEMPLATE: infra/main.bicep
+  PARAMETERS: infra/main.dev.bicepparam
+  LOCATION: westeurope
+
+jobs:
+  compile:
+    name: Compile, lint and unit test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Bicep CLI
+        run: |
+          curl -sLo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x bicep
+          sudo mv bicep /usr/local/bin/bicep
+          bicep --version
+
+      - name: Build every template
+        run: |
+          set -euo pipefail
+          # Compiling main and bootstrap pulls in every module transitively; compiling the
+          # modules individually as well catches a module that has drifted out of use.
+          for file in $(find infra -name '*.bicep' -not -path 'infra/tests/*'); do
+            echo "::group::$file"
+            bicep build "$file" --stdout > /dev/null
+            echo "::endgroup::"
+          done
+
+      - name: Build parameter files
+        run: |
+          set -euo pipefail
+          for file in infra/main.dev.bicepparam infra/main.prod.bicepparam; do
+            bicep build-params "$file" --stdout > /dev/null
+          done
+
+      - name: Lint
+        # bicepconfig.json raises the rules that matter to error, so a warning-free build
+        # is not the bar — this step fails on anything the linter dislikes.
+        run: bicep lint ${{ env.TEMPLATE }}
+
+      - name: Offline assertions
+        run: bicep test infra/tests/main.tests.bicep
+
+  psrule:
+    name: PSRule for Azure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Analyse infrastructure as code
+        uses: microsoft/ps-rule@v2.9.0
+        with:
+          modules: PSRule.Rules.Azure
+          inputPath: infra/
+          outputFormat: Sarif
+          outputPath: reports/ps-rule.sarif
+          summary: true
+        continue-on-error: true
+
+      - name: Upload results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: reports/ps-rule.sarif
+        continue-on-error: true
+
+  whatif:
+    name: What-if against the subscription
+    runs-on: ubuntu-latest
+    needs: compile
+    # A GitHub environment lets the what-if run against a real subscription without any
+    # long-lived credential: the federated credential is scoped to this environment.
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sign in with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: What-if
+        id: whatif
+        run: |
+          set -euo pipefail
+          az deployment sub what-if \
+            --location "${{ env.LOCATION }}" \
+            --template-file "${{ env.TEMPLATE }}" \
+            --parameters "${{ env.PARAMETERS }}" \
+            --exclude-change-types Ignore NoChange \
+            --no-pretty-print > whatif.json
+          {
+            echo 'result<<WHATIF'
+            cat whatif.json
+            echo 'WHATIF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Comment on the pull request
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = [
+              '### What-if — dev',
+              '',
+              '<details><summary>Planned changes</summary>',
+              '',
+              '```json',
+              `${{ toJSON(steps.whatif.outputs.result) }}`.slice(0, 60000),
+              '```',
+              '',
+              '</details>'
+            ].join('\n');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });

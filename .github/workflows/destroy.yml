@@ -1,0 +1,55 @@
+name: Destroy
+
+# Teardown is a first-class workflow, not an afterthought. Application Gateway WAF_v2 costs
+# roughly USD 0.44 per hour whether or not anyone is looking at it, so the fastest possible
+# route from "done with the lab" to "billing stopped" belongs in the repository.
+#
+# --action-on-unmanage deleteAll is the difference between deleting the stack and deleting
+# what the stack built. Get it wrong and the resources stay, orphaned and still billed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to destroy
+        type: choice
+        options: [dev, prod]
+        default: dev
+      confirmation:
+        description: Type DESTROY to confirm
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  destroy:
+    name: Delete the deployment stack and everything it manages
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    if: inputs.confirmation == 'DESTROY'
+    env:
+      STACK_NAME: ztwp-${{ inputs.environment }}
+    steps:
+      - name: Sign in with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Delete the stack and its resources
+        run: |
+          set -euo pipefail
+          az stack sub delete \
+            --name "$STACK_NAME" \
+            --action-on-unmanage deleteAll \
+            --yes
+
+      - name: Confirm nothing is left
+        run: |
+          set -euo pipefail
+          echo 'Remaining resource groups matching the workload:'
+          az group list --query "[?starts_with(name, 'rg-ztwp-')].name" -o tsv || true

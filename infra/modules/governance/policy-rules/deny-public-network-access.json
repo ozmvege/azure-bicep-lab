@@ -1,0 +1,58 @@
+{
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "allowedValues": ["Audit", "Deny", "Disabled"],
+      "defaultValue": "Deny",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Effect applied to data services that still accept public traffic."
+      }
+    }
+  },
+  "policyRule": {
+    "if": {
+      "anyOf": [
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Storage/storageAccounts"
+            },
+            {
+              "field": "Microsoft.Storage/storageAccounts/publicNetworkAccess",
+              "notEquals": "Disabled"
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.DBforPostgreSQL/flexibleServers"
+            },
+            {
+              "field": "Microsoft.DBforPostgreSQL/flexibleServers/network.publicNetworkAccess",
+              "notEquals": "Disabled"
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.KeyVault/vaults"
+            },
+            {
+              "field": "Microsoft.KeyVault/vaults/networkAcls.defaultAction",
+              "notEquals": "Deny"
+            }
+          ]
+        }
+      ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]"
+    }
+  }
+}
